@@ -3,8 +3,8 @@ services:
   web:
     build:
       context: ./django/
-    command: python manage.py runserver 0.0.0.0:8000
-    # command: gunicorn demo.wsgi:application --bind 0.0.0.0:8000
+    # command: python manage.py runserver 0.0.0.0:8000
+    command: sh -c "python manage.py migrate --noinput && python manage.py collectstatic --noinput && gunicorn django_project.wsgi:application --bind 0.0.0.0:8000"
     volumes:
       - ./django/:/app/
       - static_files:/app/staticfiles
@@ -15,14 +15,16 @@ services:
     env_file:
       - .envdev
 
-  # nginx:
-  #   build:
-  #     context: ./nginx/
-  #   ports:
-  #     - 80:80
-  #   volumes:
-  #     - ./nginx/conf.d/:/etc/nginx/conf.d/
-  #     - static_files:/home/app/staticfiles
+  nginx:
+    build:
+      context: ./nginx/
+    ports:
+      - 80:80
+    volumes:
+      - static_files:/app/staticfiles
+      - ./nginx/conf.d/:/etc/nginx/conf.d/
+    depends_on:
+      - web
 
 volumes:
   static_files:
